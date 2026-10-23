@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# PHP environment config (if added later)
+.env
+
+# Node (if added later)
+node_modules/
