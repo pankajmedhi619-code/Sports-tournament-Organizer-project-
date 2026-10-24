@@ -15,7 +15,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE tournaments (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     sport VARCHAR(50) NOT NULL,
     format ENUM('knockout', 'round_robin', 'both') NOT NULL DEFAULT 'both',
     status ENUM('upcoming', 'ongoing', 'completed') NOT NULL DEFAULT 'upcoming',
@@ -35,23 +35,27 @@ CREATE TABLE tournament_teams (
     team_id INT NOT NULL,
     FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
     FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_entry (tournament_id, team_id)
+    UNIQUE KEY unique_tournament_team (tournament_id, team_id)
 );
 
 CREATE TABLE groups (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tournament_id INT NOT NULL,
     group_name VARCHAR(50) NOT NULL,
-    FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE
+    FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_group_per_tournament (tournament_id, group_name)
 );
 
 CREATE TABLE group_members (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    tournament_id INT NOT NULL,
     group_id INT NOT NULL,
     team_id INT NOT NULL,
+    FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
     FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
     FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_member (group_id, team_id)
+    FOREIGN KEY (tournament_id, team_id) REFERENCES tournament_teams(tournament_id, team_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_team_in_tournament_groups (tournament_id, team_id)
 );
 
 CREATE TABLE matches (
@@ -66,8 +70,9 @@ CREATE TABLE matches (
     status ENUM('scheduled', 'ongoing', 'completed') NOT NULL DEFAULT 'scheduled',
     FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
     FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL,
-    FOREIGN KEY (team1_id) REFERENCES teams(id) ON DELETE CASCADE,
-    FOREIGN KEY (team2_id) REFERENCES teams(id) ON DELETE CASCADE
+    FOREIGN KEY (tournament_id, team1_id) REFERENCES tournament_teams(tournament_id, team_id) ON DELETE CASCADE,
+    FOREIGN KEY (tournament_id, team2_id) REFERENCES tournament_teams(tournament_id, team_id) ON DELETE CASCADE,
+    CONSTRAINT chk_different_teams CHECK (team1_id <> team2_id)
 );
 
 CREATE TABLE results (
@@ -79,7 +84,8 @@ CREATE TABLE results (
     outcome ENUM('team1_win', 'team2_win', 'draw') NOT NULL,
     recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE,
-    FOREIGN KEY (winner_team_id) REFERENCES teams(id) ON DELETE SET NULL
+    FOREIGN KEY (winner_team_id) REFERENCES teams(id) ON DELETE SET NULL,
+    CONSTRAINT chk_scores_non_negative CHECK (team1_score >= 0 AND team2_score >= 0)
 );
 
 CREATE INDEX idx_tournament_status ON tournaments(status);
@@ -112,9 +118,9 @@ INSERT INTO groups (tournament_id, group_name) VALUES
 (1, 'Group A'),
 (1, 'Group B');
 
-INSERT INTO group_members (group_id, team_id) VALUES
-(1, 1), (1, 2), (1, 3),
-(2, 4), (2, 5), (2, 6);
+INSERT INTO group_members (tournament_id, group_id, team_id) VALUES
+(1, 1, 1), (1, 1, 2), (1, 1, 3),
+(1, 2, 4), (1, 2, 5), (1, 2, 6);
 
 INSERT INTO matches (tournament_id, group_id, team1_id, team2_id, match_date, venue, stage, status) VALUES
 (1, 1, 1, 2, '2024-12-01 10:00:00', 'Ground A', 'group', 'completed'),

@@ -56,10 +56,18 @@ if ($method === 'POST') {
         sendResponse('error', 'Name and sport are required', null, 400);
     }
 
-    $check = $pdo->prepare("SELECT id FROM teams WHERE name = ?");
+    $check = $pdo->prepare("SELECT id FROM teams WHERE LOWER(name) = LOWER(?)");
     $check->execute([$name]);
     if ($check->fetch()) {
         sendResponse('error', 'Team name already exists', null, 400);
+    }
+
+    if ($tournamentId) {
+        $tCheck = $pdo->prepare("SELECT id FROM tournaments WHERE id = ?");
+        $tCheck->execute([$tournamentId]);
+        if (!$tCheck->fetch()) {
+            sendResponse('error', 'Tournament not found', null, 404);
+        }
     }
 
     $stmt = $pdo->prepare("INSERT INTO teams (name, sport) VALUES (?, ?)");

@@ -1,12 +1,4 @@
-# Database Design — Sports Tournament Organizer
-
-**Author:** Divyanshu  
-**Last Updated:** 2026  
-**Database:** MySQL  
-
----
-
-## What is this file?
+## Database Design
 
 This document explains how I designed the database for our Sports Tournament Organizer project. It covers what tables I created, why I created them, what data goes inside each one, and how they are connected to each other.
 
@@ -22,7 +14,7 @@ Think of the database like a set of Excel sheets. Each sheet (table) stores one 
 erDiagram
     TOURNAMENTS {
         int id PK
-        varchar name
+        varchar name UK
         varchar sport
         enum format
         enum status
@@ -31,7 +23,7 @@ erDiagram
 
     TEAMS {
         int id PK
-        varchar name
+        varchar name UK
         varchar sport
         datetime created_at
     }
@@ -50,6 +42,7 @@ erDiagram
 
     GROUP_MEMBERS {
         int id PK
+        int tournament_id FK
         int group_id FK
         int team_id FK
     }
@@ -93,7 +86,7 @@ erDiagram
 
 ## Table Descriptions
 
-Here I explain each table in simple words, followed by the column details.
+Here I explain each table in simple words, followed by the column details and validation rules.
 
 ---
 
@@ -105,7 +98,7 @@ This table stores every tournament that is created in the system. For example, i
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | INT, PK, AUTO_INCREMENT | Unique ID given to each tournament automatically |
-| `name` | VARCHAR(100) | Name of the tournament |
+| `name` | VARCHAR(100), UNIQUE | Name of the tournament (must be unique) |
 | `sport` | VARCHAR(50) | Type of sport — Cricket, Football, Basketball, etc. |
 | `format` | ENUM('knockout', 'round_robin', 'both') | How the tournament is played |
 | `status` | ENUM('upcoming', 'ongoing', 'completed') | Current state of the tournament |
@@ -121,7 +114,7 @@ This table stores all the teams that register in the system. A team registers on
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | INT, PK, AUTO_INCREMENT | Unique ID for each team |
-| `name` | VARCHAR(100) | Team name — must be unique |
+| `name` | VARCHAR(100), UNIQUE | Team name — must be unique so no duplicate registrations |
 | `sport` | VARCHAR(50) | Sport the team plays |
 | `created_at` | DATETIME | When the team registered |
 
@@ -130,7 +123,7 @@ This table stores all the teams that register in the system. A team registers on
 ### 3. `tournament_teams`
 
 **What it does:**  
-One team can participate in many tournaments, and one tournament can have many teams. This table acts as the bridge between them. It just stores which team joined which tournament.
+One team can participate in many tournaments, and one tournament can have many teams. This table acts as the bridge between them. It prevents duplicate registrations by ensuring a team cannot join the same tournament twice.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -138,7 +131,7 @@ One team can participate in many tournaments, and one tournament can have many t
 | `tournament_id` | INT, FK → tournaments.id | Which tournament |
 | `team_id` | INT, FK → teams.id | Which team |
 
-> **Example:** If Team A and Team B both join Tournament 1, this table will have two rows — one for each team.
+> **Constraint:** `UNIQUE KEY unique_tournament_team (tournament_id, team_id)` prevents any team from registering twice into the same tournament.
 
 ---
 
@@ -153,20 +146,23 @@ In a round-robin tournament, teams are divided into groups (Group A, Group B, et
 | `tournament_id` | INT, FK → tournaments.id | Which tournament this group belongs to |
 | `group_name` | VARCHAR(50) | Name of the group e.g. "Group A", "Group B" |
 
+> **Constraint:** `UNIQUE KEY unique_group_per_tournament (tournament_id, group_name)` prevents duplicate group names within the same tournament.
+
 ---
 
 ### 5. `group_members`
 
 **What it does:**  
-After the DSU algorithm divides teams into groups, this table saves the result — which team goes into which group. One team is in one group, and one group has many teams.
+After the DSU algorithm divides teams into groups, this table saves which team is in which group. A team cannot be placed into more than one group in the same tournament.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | INT, PK, AUTO_INCREMENT | Unique row ID |
+| `tournament_id` | INT, FK → tournaments.id | Which tournament |
 | `group_id` | INT, FK → groups.id | Which group |
 | `team_id` | INT, FK → teams.id | Which team is in that group |
 
-> **Note:** This table gets filled by the DSU module (Rahimul/Shemphang's part) through the `groups.php` API endpoint.
+> **Constraint:** `UNIQUE KEY unique_team_in_tournament_groups (tournament_id, team_id)` ensures a team can only belong to one group per tournament.
 
 ---
 
@@ -187,26 +183,24 @@ This table stores every match scheduled in a tournament — who is playing again
 | `stage` | ENUM('group', 'quarterfinal', 'semifinal', 'final') | Stage of the tournament |
 | `status` | ENUM('scheduled', 'ongoing', 'completed') | Current match status |
 
-> **Important:** `group_id` is nullable because knockout stage matches (semifinals, finals) do not belong to any group.
+> **Constraint:** `CONSTRAINT chk_different_teams CHECK (team1_id <> team2_id)` guarantees that a team can never play against itself.
 
 ---
 
 ### 7. `results`
 
 **What it does:**  
-After a match is played, the score and winner are stored here. Every match has exactly one result entry.
+After a match is played, the score and winner are stored here. Every match has at most one result entry.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | INT, PK, AUTO_INCREMENT | Unique result ID |
-| `match_id` | INT, FK → matches.id | Which match this result belongs to |
+| `match_id` | INT, FK → matches.id, UNIQUE | Which match this result belongs to (one result per match) |
 | `team1_score` | INT | Score of team 1 |
 | `team2_score` | INT | Score of team 2 |
 | `winner_team_id` | INT, FK → teams.id *(nullable)* | The team that won — null if it's a draw |
 | `outcome` | ENUM('team1_win', 'team2_win', 'draw') | Result of the match |
 | `recorded_at` | DATETIME | When the result was entered |
-
-> **Note:** `winner_team_id` is kept nullable to handle draws.
 
 ---
 
@@ -241,11 +235,11 @@ After a match is played, the score and winner are stored here. Every match has e
 
 ---
 
-## Important Notes
+## Important Rules & Safeguards
 
-- A team **must** be added to `tournament_teams` before it can be assigned to a group or a match.
-- `group_id` in `matches` is **left empty (NULL)** for knockout rounds — only group stage matches have a group.
-- `winner_team_id` in `results` is **left empty (NULL)** when the match ends in a draw.
-- The DSU module will communicate with my `groups.php` endpoint to save group assignments.
-- All PHP endpoints return JSON so the frontend can read them easily.
-- Database passwords will **not** be pushed to GitHub — they will be stored in a separate `config.php` file.
+- **No self-matches:** A team cannot play against itself (`team1_id != team2_id` enforced by MySQL `CHECK`).
+- **No duplicate registrations:** A team cannot join the same tournament twice (`unique_tournament_team`).
+- **No multi-group teams:** A team cannot be placed into two different groups in the same tournament (`unique_team_in_tournament_groups`).
+- **No duplicate groups:** A tournament cannot have two groups with the identical name (`unique_group_per_tournament`).
+- **One result per match:** Each match can only have one result row (`match_id` is UNIQUE).
+- **Group is optional for knockout:** `group_id` in `matches` is `NULL` for quarterfinal, semifinal, and final rounds.
