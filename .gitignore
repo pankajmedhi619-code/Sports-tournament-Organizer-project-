@@ -9,8 +9,11 @@ Thumbs.db
 # Logs
 *.log
 
-# PHP environment config (if added later)
+# PHP environment config
 .env
+
+# Database credentials — never push to GitHub
+backend/php/config.php
 
 # Node (if added later)
 node_modules/

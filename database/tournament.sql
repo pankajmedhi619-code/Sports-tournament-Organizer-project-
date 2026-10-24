@@ -1,4 +1,3 @@
--- Sports Tournament Organizer
 -- Database Setup File
 -- Author: Divyanshu
 -- STEP 1: Create and select the database
