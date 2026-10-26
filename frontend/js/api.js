@@ -87,6 +87,60 @@
         },
 
         // ------------------------------
+        // GROUPS
+        // ------------------------------
+
+        getGroups(tournamentId) {
+            if (tournamentId === null ||
+                tournamentId === undefined ||
+                tournamentId === "") {
+                throw new Error("Tournament ID is required");
+            }
+
+            return request(
+                `groups.php?tournament_id=${encodeURIComponent(tournamentId)}`
+            );
+        },
+
+        saveGroups(tournamentId, groups, replace = true) {
+            if (tournamentId === null ||
+                tournamentId === undefined ||
+                tournamentId === "") {
+                throw new Error("Tournament ID is required");
+            }
+
+            if (!Array.isArray(groups)) {
+                throw new TypeError("Groups must be an array");
+            }
+
+            // Match the request format expected by groups.php
+            const normalizedGroups = groups.map((group, index) => {
+                const teamIds = group.teamIds ?? group.team_ids ?? [];
+
+                if (!Array.isArray(teamIds)) {
+                    throw new TypeError(
+                        `Group ${index + 1} must contain an array of team IDs`
+                    );
+                }
+
+                return {
+                    name: group.name ?? group.group_name ?? `Group ${index + 1}`,
+                    team_ids: teamIds
+                };
+            });
+
+            return request("groups.php", {
+                method: "POST",
+                body: JSON.stringify({
+                    tournament_id: tournamentId,
+                    replace: replace,
+                    groups: normalizedGroups
+                })
+            });
+        },
+
+
+        // ------------------------------
         // TOURNAMENTS
         // ------------------------------
 
