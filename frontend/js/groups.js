@@ -93,5 +93,59 @@
         return groups;
     }
 
-    return { generateGroups };
+
+async function generateAndSaveGroups(
+    tournamentId,
+    maxGroupSize,
+    apiClient
+) {
+    if (
+        tournamentId === null ||
+        tournamentId === undefined ||
+        tournamentId === ""
+    ) {
+        throw new Error("Tournament ID is required");
+    }
+
+    if (
+        !apiClient ||
+        typeof apiClient.getTeams !== "function" ||
+        typeof apiClient.saveGroups !== "function"
+    ) {
+        throw new Error("A valid API client is required");
+    }
+
+    // Step 1: Fetch teams registered in this tournament.
+    const teams = await apiClient.getTeams(tournamentId);
+
+    if (!Array.isArray(teams)) {
+        throw new Error("The API did not return a valid team list");
+    }
+
+    if (teams.length === 0) {
+        throw new Error("No teams are registered in this tournament");
+    }
+
+    // Step 2: Generate groups using our DSU algorithm.
+    const groups = generateGroups(teams, maxGroupSize);
+
+    // Step 3: Save groups to the PHP backend.
+    const savedData = await apiClient.saveGroups(
+        tournamentId,
+        groups,
+        true
+    );
+
+    // Return both generated groups and the backend response.
+    return {
+        groups,
+        savedData
+    };
+}
+
+return {
+    generateGroups,
+    generateAndSaveGroups
+};
+
 });
