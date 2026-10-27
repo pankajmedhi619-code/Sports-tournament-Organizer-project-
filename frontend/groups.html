@@ -1,1 +1,351 @@
 ﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Groups | SportsHub</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: #14213d;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            color: white;
+            text-decoration: none;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .logo span, .nav-links a.active {
+            color: #39d98a;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #d8e0ee;
+            text-decoration: none;
+        }
+
+        .container {
+            width: 88%;
+            max-width: 1100px;
+            margin: 35px auto;
+        }
+
+        .eyebrow {
+            color: #16a765;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .page-heading {
+            margin-bottom: 25px;
+        }
+
+        .page-heading h1 {
+            color: #14213d;
+            font-size: 32px;
+            margin: 8px 0;
+        }
+
+        .form-card, .content-card {
+            background: white;
+            padding: 25px;
+            border: 1px solid #e5eaf1;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 18px rgba(20, 33, 61, 0.04);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #d6deea;
+            border-radius: 8px;
+            font: inherit;
+            background: white;
+        }
+
+        button {
+            background: #14213d;
+            color: white;
+            padding: 11px 18px;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1b2d50;
+        }
+
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .group-card {
+            background: #fff;
+            border: 1px solid #e5eaf1;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .group-card h3 {
+            color: #14213d;
+            margin-top: 0;
+        }
+
+        .group-card li {
+            padding: 7px 0;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .empty-message {
+            color: #718096;
+        }
+
+        .footer {
+            background: #14213d;
+            color: #d3ddeb;
+            text-align: center;
+            padding: 22px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 92%;
+                margin: 22px auto;
+            }
+
+            .navbar {
+                padding: 18px 5%;
+            }
+
+            .groups-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card, .content-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">🏆 Sports<span>Hub</span></a>
+
+        <nav class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="teams.html">Teams</a>
+            <a href="groups.html" class="active">Groups</a>
+            <a href="matches.html">Matches</a>
+            <a href="results.html">Results</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="page-heading">
+            <p class="eyebrow">TOURNAMENT MANAGEMENT</p>
+            <h1>Manage Groups</h1>
+            <p>Organize registered teams into tournament groups.</p>
+        </section>
+
+        <section class="form-card">
+            <h2>Assign a Team to a Group</h2>
+            <p>Select a registered team and choose its group.</p>
+
+            <form id="groupForm">
+                <div class="form-group">
+                    <label for="teamSelect">Select Team</label>
+                    <select id="teamSelect" required>
+                        <option value="">Select a team</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="groupSelect">Select Group</label>
+                    <select id="groupSelect" required>
+                        <option value="">Select a group</option>
+                        <option value="Group A">Group A</option>
+                        <option value="Group B">Group B</option>
+                    </select>
+                </div>
+
+                <button type="submit">Assign Team</button>
+                <p id="message" role="status"></p>
+            </form>
+        </section>
+
+        <section class="content-card">
+            <h2>Tournament Groups</h2>
+
+            <div class="groups-grid">
+                <article class="group-card">
+                    <h3>Group A</h3>
+                    <ul id="groupAList">
+                        <li class="empty-message">No teams assigned yet.</li>
+                    </ul>
+                </article>
+
+                <article class="group-card">
+                    <h3>Group B</h3>
+                    <ul id="groupBList">
+                        <li class="empty-message">No teams assigned yet.</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SportsHub | Sports Tournament Organizer</p>
+        <p>Organize. Compete. Celebrate.</p>
+    </footer>
+
+    <script>
+        const teamSelect = document.getElementById("teamSelect");
+        const groupForm = document.getElementById("groupForm");
+        const groupSelect = document.getElementById("groupSelect");
+        const message = document.getElementById("message");
+
+        let registeredTeams = [];
+        let assignments = {};
+
+        try {
+            registeredTeams = JSON.parse(
+                localStorage.getItem("sportsHubTeams") || "[]"
+            );
+
+            assignments = JSON.parse(
+                localStorage.getItem("sportsHubGroups") || "{}"
+            );
+
+            if (!Array.isArray(registeredTeams)) registeredTeams = [];
+            if (!assignments || typeof assignments !== "object" ||
+                Array.isArray(assignments)) assignments = {};
+        } catch (error) {
+            registeredTeams = [];
+            assignments = {};
+        }
+
+        function saveAssignments() {
+            localStorage.setItem(
+                "sportsHubGroups",
+                JSON.stringify(assignments)
+            );
+        }
+
+        function populateTeams() {
+            teamSelect.innerHTML = '<option value="">Select a team</option>';
+
+            registeredTeams.forEach(team => {
+                const option = document.createElement("option");
+                option.value = team.name;
+                option.textContent = team.name;
+                teamSelect.appendChild(option);
+            });
+        }
+
+        function displayGroups() {
+            const groupAList = document.getElementById("groupAList");
+            const groupBList = document.getElementById("groupBList");
+
+            groupAList.replaceChildren();
+            groupBList.replaceChildren();
+
+            const groupA = [];
+            const groupB = [];
+
+            registeredTeams.forEach(team => {
+                if (assignments[team.name] === "Group A") {
+                    groupA.push(team);
+                } else if (assignments[team.name] === "Group B") {
+                    groupB.push(team);
+                }
+            });
+
+            function addTeams(list, teams) {
+                if (teams.length === 0) {
+                    const item = document.createElement("li");
+                    item.className = "empty-message";
+                    item.textContent = "No teams assigned yet.";
+                    list.appendChild(item);
+                    return;
+                }
+
+                teams.forEach(team => {
+                    const item = document.createElement("li");
+                    item.textContent = team.name + " — " + team.sport;
+                    list.appendChild(item);
+                });
+            }
+
+            addTeams(groupAList, groupA);
+            addTeams(groupBList, groupB);
+        }
+
+        groupForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const teamName = teamSelect.value;
+            const groupName = groupSelect.value;
+
+            if (!teamName || !groupName) {
+                message.textContent = "Please select a team and group.";
+                return;
+            }
+
+            assignments[teamName] = groupName;
+            saveAssignments();
+            displayGroups();
+
+            message.textContent = teamName + " assigned to " + groupName + ".";
+            groupForm.reset();
+        });
+
+        populateTeams();
+        displayGroups();
+    </script>
+</body>
+</html>
+

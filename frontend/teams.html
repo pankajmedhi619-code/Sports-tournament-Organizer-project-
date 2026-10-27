@@ -1,1 +1,245 @@
 ﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Teams | SportsHub</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
+        }
+        .navbar {
+            background: #14213d;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .logo {
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .logo span, .nav-links a.active {
+            color: #39d98a;
+        }
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+        }
+        .container {
+            width: 88%;
+            max-width: 1100px;
+            margin: 35px auto;
+        }
+        .eyebrow { color: #16a765; font-size: 12px; font-weight: bold; letter-spacing: 2px; }
+        .page-heading { margin-bottom: 25px; }
+        .form-card, .content-card {
+            background: white;
+            padding: 25px;
+            border: 1px solid #e5eaf1;
+            border-radius: 14px;
+            margin-bottom: 25px;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 7px; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #d6deea;
+            border-radius: 7px;
+            font: inherit;
+        }
+        button {
+            background: #14213d;
+            color: white;
+            padding: 11px 18px;
+            border: 0;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 13px; border-bottom: 1px solid #e5eaf1; text-align: left; }
+        th { background: #edf2f8; }
+        .footer {
+            background: #14213d;
+            color: white;
+            text-align: center;
+            padding: 22px;
+            font-size: 13px;
+        }
+        #message { margin-top: 12px; font-weight: bold; }
+        @media (max-width: 600px) {
+            .container { width: 92%; }
+            .navbar { padding: 18px 5%; }
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">🏆 Sports<span>Hub</span></a>
+        <nav class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="teams.html" class="active">Teams</a>
+            <a href="groups.html">Groups</a>
+            <a href="matches.html">Matches</a>
+            <a href="results.html">Results</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="page-heading">
+            <p class="eyebrow">TOURNAMENT MANAGEMENT</p>
+            <h1>Manage Teams</h1>
+            <p>Register and manage teams participating in the tournament.</p>
+        </section>
+
+        <section class="form-card">
+            <h2>Register a New Team</h2>
+            <p>Enter your team details below.</p>
+
+            <form id="teamForm">
+                <div class="form-group">
+                    <label for="teamName">Team Name</label>
+                    <input id="teamName" type="text" placeholder="Enter team name" required>
+                </div>
+                <div class="form-group">
+                    <label for="captainName">Captain's Name</label>
+                    <input id="captainName" type="text" placeholder="Enter captain's name" required>
+                </div>
+                <div class="form-group">
+                    <label for="sport">Sport</label>
+                    <select id="sport" required>
+                        <option value="">Select a sport</option>
+                        <option>Football</option>
+                        <option>Cricket</option>
+                        <option>Basketball</option>
+                        <option>Volleyball</option>
+                        <option>Badminton</option>
+                    </select>
+                </div>
+                <button type="submit">Register Team</button>
+                <p id="message" role="status"></p>
+            </form>
+        </section>
+
+        <section class="content-card">
+            <h2>Registered Teams</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Team Name</th><th>Captain</th><th>Sport</th><th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamList">
+                        <tr><td colspan="5">No teams registered yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SportsHub | Sports Tournament Organizer</p>
+        <p>Organize. Compete. Celebrate.</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById("teamForm");
+        const list = document.getElementById("teamList");
+        const message = document.getElementById("message");
+        let teams = [];
+
+        try {
+            teams = JSON.parse(localStorage.getItem("sportsHubTeams") || "[]");
+            if (!Array.isArray(teams)) teams = [];
+        } catch (error) {
+            teams = [];
+        }
+
+        function renderTeams() {
+            list.replaceChildren();
+
+            if (teams.length === 0) {
+                const row = list.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 5;
+                cell.textContent = "No teams registered yet.";
+                return;
+            }
+
+            teams.forEach((team, index) => {
+                const row = list.insertRow();
+                [index + 1, team.name, team.captain, team.sport].forEach(value => {
+                    row.insertCell().textContent = value;
+                });
+
+                const actionCell = row.insertCell();
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Delete";
+
+                deleteButton.addEventListener("click", () => {
+                    teams.splice(index, 1);
+                    saveTeams();
+                    renderTeams();
+                    message.textContent = "Team deleted.";
+                });
+
+                actionCell.appendChild(deleteButton);
+            });
+        }
+
+        function saveTeams() {
+            try {
+                localStorage.setItem("sportsHubTeams", JSON.stringify(teams));
+            } catch (error) {
+                message.textContent = "Browser storage is unavailable.";
+            }
+        }
+
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+
+            const name = document.getElementById("teamName").value.trim();
+            const captain = document.getElementById("captainName").value.trim();
+            const sport = document.getElementById("sport").value;
+
+            if (!name || !captain || !sport) {
+                message.textContent = "Please complete all fields.";
+                return;
+            }
+
+            if (teams.some(team => team.name.toLowerCase() === name.toLowerCase())) {
+                message.textContent = "That team name is already registered.";
+                return;
+            }
+
+            teams.push({ name, captain, sport });
+            saveTeams();
+            renderTeams();
+            form.reset();
+            message.textContent = "Team registered successfully!";
+        });
+
+        renderTeams();
+    </script>
+</body>
+</html>

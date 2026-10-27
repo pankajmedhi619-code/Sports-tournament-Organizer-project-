@@ -1,1 +1,407 @@
 ﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Schedule | SportsHub</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: #14213d;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            color: white;
+            text-decoration: none;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .logo span, .nav-links a.active {
+            color: #39d98a;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #d8e0ee;
+            text-decoration: none;
+        }
+
+        .container {
+            width: 88%;
+            max-width: 1100px;
+            margin: 35px auto;
+        }
+
+        .eyebrow {
+            color: #16a765;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .page-heading {
+            margin-bottom: 25px;
+        }
+
+        .page-heading h1 {
+            color: #14213d;
+            font-size: 32px;
+            margin: 8px 0;
+        }
+
+        .form-card, .content-card {
+            background: white;
+            padding: 25px;
+            border: 1px solid #e5eaf1;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 18px rgba(20, 33, 61, 0.04);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #d6deea;
+            border-radius: 8px;
+            font: inherit;
+            background: white;
+        }
+
+        button {
+            background: #14213d;
+            color: white;
+            padding: 11px 18px;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1b2d50;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 13px;
+            border-bottom: 1px solid #e5eaf1;
+            text-align: left;
+        }
+
+        th {
+            background: #edf2f8;
+            color: #14213d;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #e5f8ed;
+            color: #167544;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        #message {
+            font-weight: bold;
+            margin-top: 12px;
+        }
+
+        .footer {
+            background: #14213d;
+            color: #d3ddeb;
+            text-align: center;
+            padding: 22px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 92%;
+                margin: 22px auto;
+            }
+
+            .navbar {
+                padding: 18px 5%;
+            }
+
+            .form-card, .content-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">🏆 Sports<span>Hub</span></a>
+
+        <nav class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="teams.html">Teams</a>
+            <a href="groups.html">Groups</a>
+            <a href="matches.html" class="active">Matches</a>
+            <a href="results.html">Results</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="page-heading">
+            <p class="eyebrow">TOURNAMENT MANAGEMENT</p>
+            <h1>Match Schedule</h1>
+            <p>Create and view upcoming tournament matches.</p>
+        </section>
+
+        <section class="form-card">
+            <h2>Schedule a Match</h2>
+            <p style="color:#718096; margin:8px 0 22px;">
+                Select two different registered teams and set the match time.
+            </p>
+
+            <form id="matchForm">
+                <div class="form-group">
+                    <label for="team1">First Team</label>
+                    <select id="team1" required>
+                        <option value="">Select first team</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="team2">Second Team</label>
+                    <select id="team2" required>
+                        <option value="">Select second team</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="matchDate">Match Date</label>
+                    <input type="date" id="matchDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="matchTime">Match Time</label>
+                    <input type="time" id="matchTime" required>
+                </div>
+
+                <button type="submit">Schedule Match</button>
+                <p id="message" role="status"></p>
+            </form>
+        </section>
+
+        <section class="content-card">
+            <h2>Upcoming Matches</h2>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>First Team</th>
+                            <th>Second Team</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matchList">
+                        <tr>
+                            <td colspan="7">No matches scheduled yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SportsHub | Sports Tournament Organizer</p>
+        <p>Organize. Compete. Celebrate.</p>
+    </footer>
+
+    <script>
+        const matchForm = document.getElementById("matchForm");
+        const team1Select = document.getElementById("team1");
+        const team2Select = document.getElementById("team2");
+        const matchDateInput = document.getElementById("matchDate");
+        const matchTimeInput = document.getElementById("matchTime");
+        const matchList = document.getElementById("matchList");
+        const message = document.getElementById("message");
+
+        let teams = [];
+        let matches = [];
+
+        try {
+            teams = JSON.parse(localStorage.getItem("sportsHubTeams") || "[]");
+            matches = JSON.parse(localStorage.getItem("sportsHubMatches") || "[]");
+
+            if (!Array.isArray(teams)) teams = [];
+            if (!Array.isArray(matches)) matches = [];
+        } catch (error) {
+            teams = [];
+            matches = [];
+        }
+
+        function populateTeamOptions() {
+            [team1Select, team2Select].forEach((select, index) => {
+                select.innerHTML = "";
+
+                const placeholder = document.createElement("option");
+                placeholder.value = "";
+                placeholder.textContent = index === 0
+                    ? "Select first team"
+                    : "Select second team";
+
+                select.appendChild(placeholder);
+
+                teams.forEach(team => {
+                    const option = document.createElement("option");
+                    option.value = team.name;
+                    option.textContent = team.name;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function saveMatches() {
+            localStorage.setItem("sportsHubMatches", JSON.stringify(matches));
+        }
+
+        function renderMatches() {
+            matchList.replaceChildren();
+
+            if (matches.length === 0) {
+                const row = matchList.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 7;
+                cell.textContent = "No matches scheduled yet.";
+                return;
+            }
+
+            matches.forEach((match, index) => {
+                const row = matchList.insertRow();
+
+                [
+                    index + 1,
+                    match.team1,
+                    match.team2,
+                    match.date,
+                    match.time
+                ].forEach(value => {
+                    row.insertCell().textContent = value;
+                });
+
+                const statusCell = row.insertCell();
+                const status = document.createElement("span");
+                status.className = "status";
+                status.textContent = "Upcoming";
+                statusCell.appendChild(status);
+
+                const actionCell = row.insertCell();
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.textContent = "Delete";
+
+                deleteButton.addEventListener("click", () => {
+                    if (confirm("Delete this scheduled match?")) {
+                        matches.splice(index, 1);
+                        saveMatches();
+                        renderMatches();
+                    }
+                });
+
+                actionCell.appendChild(deleteButton);
+            });
+        }
+
+        matchForm.addEventListener("submit", event => {
+            event.preventDefault();
+
+            const team1 = team1Select.value;
+            const team2 = team2Select.value;
+            const date = matchDateInput.value;
+            const time = matchTimeInput.value;
+
+            if (!team1 || !team2 || !date || !time) {
+                message.textContent = "Please fill in all fields.";
+                return;
+            }
+
+            if (team1 === team2) {
+                message.textContent = "Please select two different teams.";
+                return;
+            }
+
+            if (teams.length < 2) {
+                message.textContent = "Register at least two teams first.";
+                return;
+            }
+
+            const duplicate = matches.some(match =>
+                match.team1 === team1 &&
+                match.team2 === team2 &&
+                match.date === date &&
+                match.time === time
+            );
+
+            if (duplicate) {
+                message.textContent = "This match is already scheduled.";
+                return;
+            }
+
+            matches.push({ team1, team2, date, time });
+            saveMatches();
+            renderMatches();
+            matchForm.reset();
+            message.textContent = "Match scheduled successfully!";
+        });
+
+        populateTeamOptions();
+        renderMatches();
+    </script>
+</body>
+</html>

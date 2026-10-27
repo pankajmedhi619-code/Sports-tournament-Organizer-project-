@@ -1,1 +1,418 @@
 ﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Results | SportsHub</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: #14213d;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            color: white;
+            text-decoration: none;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .logo span, .nav-links a.active {
+            color: #39d98a;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #d8e0ee;
+            text-decoration: none;
+        }
+
+        .container {
+            width: 88%;
+            max-width: 1100px;
+            margin: 35px auto;
+        }
+
+        .eyebrow {
+            color: #16a765;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .page-heading {
+            margin-bottom: 25px;
+        }
+
+        .page-heading h1 {
+            color: #14213d;
+            font-size: 32px;
+            margin: 8px 0;
+        }
+
+        .content-card {
+            background: white;
+            padding: 25px;
+            border: 1px solid #e5eaf1;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 18px rgba(20, 33, 61, 0.04);
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 13px;
+            border-bottom: 1px solid #e5eaf1;
+            text-align: left;
+        }
+
+        th {
+            background: #edf2f8;
+            color: #14213d;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            border: 1px solid #d6deea;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #14213d;
+            color: white;
+            padding: 9px 13px;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            margin: 2px;
+        }
+
+        button:hover {
+            background: #1b2d50;
+        }
+
+        .winner {
+            color: #16834a;
+            font-weight: bold;
+        }
+
+        .draw {
+            color: #996515;
+            font-weight: bold;
+        }
+
+        #message {
+            font-weight: bold;
+            margin-top: 12px;
+        }
+
+        .footer {
+            background: #14213d;
+            color: #d3ddeb;
+            text-align: center;
+            padding: 22px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 92%;
+                margin: 22px auto;
+            }
+
+            .navbar {
+                padding: 18px 5%;
+            }
+
+            .content-card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">🏆 Sports<span>Hub</span></a>
+
+        <nav class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="teams.html">Teams</a>
+            <a href="groups.html">Groups</a>
+            <a href="matches.html">Matches</a>
+            <a href="results.html" class="active">Results</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="page-heading">
+            <p class="eyebrow">TOURNAMENT MANAGEMENT</p>
+            <h1>Match Results</h1>
+            <p>Enter match scores and view winners.</p>
+        </section>
+
+        <section class="content-card">
+            <h2>Record Match Scores</h2>
+            <p style="color:#718096;">
+                Enter both scores and save the result for each scheduled match.
+            </p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Match</th>
+                            <th>Team 1</th>
+                            <th>Score</th>
+                            <th>Team 2</th>
+                            <th>Score</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreList">
+                        <tr>
+                            <td colspan="6">No matches scheduled yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p id="message" role="status"></p>
+        </section>
+
+        <section class="content-card">
+            <h2>Completed Match Results</h2>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Match</th>
+                            <th>Score</th>
+                            <th>Winner / Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultList">
+                        <tr>
+                            <td colspan="3">No results recorded yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SportsHub | Sports Tournament Organizer</p>
+        <p>Organize. Compete. Celebrate.</p>
+    </footer>
+
+    <script>
+        const scoreList = document.getElementById("scoreList");
+        const resultList = document.getElementById("resultList");
+        const message = document.getElementById("message");
+
+        let matches = [];
+        let results = {};
+
+        try {
+            matches = JSON.parse(
+                localStorage.getItem("sportsHubMatches") || "[]"
+            );
+            results = JSON.parse(
+                localStorage.getItem("sportsHubResults") || "{}"
+            );
+
+            if (!Array.isArray(matches)) matches = [];
+            if (!results || typeof results !== "object" ||
+                Array.isArray(results)) results = {};
+        } catch (error) {
+            matches = [];
+            results = {};
+        }
+
+        function matchKey(match) {
+            return JSON.stringify([
+                match.team1, match.team2, match.date, match.time
+            ]);
+        }
+
+        function getOutcome(score1, score2) {
+            if (score1 > score2) return "winner1";
+            if (score2 > score1) return "winner2";
+            return "draw";
+        }
+
+        function renderScores() {
+            scoreList.replaceChildren();
+
+            if (matches.length === 0) {
+                const row = scoreList.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 6;
+                cell.textContent = "No matches scheduled yet. Create matches on the Matches page first.";
+                renderResults();
+                return;
+            }
+
+            matches.forEach((match, index) => {
+                const key = matchKey(match);
+                const saved = results[key];
+                const row = scoreList.insertRow();
+
+                row.insertCell().textContent = index + 1;
+                row.insertCell().textContent = match.team1;
+
+                const score1Cell = row.insertCell();
+                const score1 = document.createElement("input");
+                score1.type = "number";
+                score1.min = "0";
+                score1.step = "1";
+                score1.required = true;
+                score1.setAttribute("aria-label", match.team1 + " score");
+                score1.value = saved ? saved.score1 : "";
+                score1Cell.appendChild(score1);
+
+                row.insertCell().textContent = match.team2;
+
+                const score2Cell = row.insertCell();
+                const score2 = document.createElement("input");
+                score2.type = "number";
+                score2.min = "0";
+                score2.step = "1";
+                score2.required = true;
+                score2.setAttribute("aria-label", match.team2 + " score");
+                score2.value = saved ? saved.score2 : "";
+                score2Cell.appendChild(score2);
+
+                const actionCell = row.insertCell();
+                const saveButton = document.createElement("button");
+                saveButton.type = "button";
+                saveButton.textContent = saved ? "Update Score" : "Save Score";
+
+                saveButton.addEventListener("click", () => {
+                    if (score1.value === "" || score2.value === "") {
+                        message.textContent = "Please enter both scores.";
+                        return;
+                    }
+
+                    const firstScore = Number(score1.value);
+                    const secondScore = Number(score2.value);
+
+                    if (
+                        !Number.isSafeInteger(firstScore) ||
+                        !Number.isSafeInteger(secondScore) ||
+                        firstScore < 0 || secondScore < 0
+                    ) {
+                        message.textContent = "Enter valid non-negative whole-number scores.";
+                        return;
+                    }
+
+                    results[key] = {
+                        team1: match.team1,
+                        team2: match.team2,
+                        date: match.date,
+                        time: match.time,
+                        score1: firstScore,
+                        score2: secondScore
+                    };
+
+                    try {
+                        localStorage.setItem(
+                            "sportsHubResults", JSON.stringify(results)
+                        );
+                    } catch (error) {
+                        message.textContent = "Could not save the result in this browser.";
+                        return;
+                    }
+
+                    message.textContent = "Score saved successfully!";
+                    renderScores();
+                    renderResults();
+                });
+
+                actionCell.appendChild(saveButton);
+            });
+
+            renderResults();
+        }
+
+        function renderResults() {
+            resultList.replaceChildren();
+
+            const completed = matches
+                .map(match => ({
+                    match,
+                    result: results[matchKey(match)]
+                }))
+                .filter(item => item.result);
+
+            if (completed.length === 0) {
+                const row = resultList.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 3;
+                cell.textContent = "No results recorded yet.";
+                return;
+            }
+
+            completed.forEach(({ match, result }) => {
+                const row = resultList.insertRow();
+
+                row.insertCell().textContent =
+                    match.team1 + " vs " + match.team2;
+
+                row.insertCell().textContent =
+                    result.score1 + " - " + result.score2;
+
+                const outcomeCell = row.insertCell();
+
+                if (result.score1 === result.score2) {
+                    outcomeCell.textContent = "Draw";
+                    outcomeCell.className = "draw";
+                } else {
+                    outcomeCell.textContent = result.score1 > result.score2
+                        ? result.team1 + " wins"
+                        : result.team2 + " wins";
+                    outcomeCell.className = "winner";
+                }
+            });
+        }
+
+        renderScores();
+    </script>
+</body>
+</html>
