@@ -22,9 +22,6 @@ function sendResponse($status, $message, $data = null, $code = 200) {
     exit;
 }
 
-// --------------------------------------------------------------------------
-// GET: Fetch groups and their team members
-// --------------------------------------------------------------------------
 if ($method === 'GET') {
     // 1. Fetch single group by ID
     if (isset($_GET['id'])) {
@@ -50,7 +47,6 @@ if ($method === 'GET') {
         sendResponse('success', 'Group found', $group);
     }
 
-    // 2. Fetch all groups for a specific tournament
     if (isset($_GET['tournament_id'])) {
         $tournamentId = (int)$_GET['tournament_id'];
 
