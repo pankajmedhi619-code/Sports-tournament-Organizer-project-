@@ -1,181 +1,185 @@
-<?php
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+﻿<?php
+header("Content-Type: application/json; charset=UTF-8");
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
+require_once "db.php";
 
-require_once 'db.php';
 $pdo = getConnection();
+$method = $_SERVER["REQUEST_METHOD"];
 
-function resultResponse($status, $message, $data = null, $code = 200) {
-    http_response_code($code);
+function sendResponse($status, $message, $data = null, $httpCode = 200)
+{
+    http_response_code($httpCode);
 
-    $response = [
-        'status' => $status,
-        'message' => $message
-    ];
+    echo json_encode([
+        "status" => $status,
+        "message" => $message,
+        "data" => $data
+    ]);
 
-    if ($data !== null) {
-        $response['data'] = $data;
-    }
-
-    echo json_encode($response);
     exit;
 }
 
-function resultInput() {
-    $data = json_decode(file_get_contents('php://input'), true);
-    return is_array($data) ? $data : $_POST;
+function getJsonInput()
+{
+    $input = json_decode(file_get_contents("php://input"), true);
+    return is_array($input) ? $input : [];
 }
 
-$method = $_SERVER['REQUEST_METHOD'];
+try {
+    // GET: Fetch tournament results
+    if ($method === "GET") {
+        $tournamentId = $_GET["tournament_id"] ?? null;
 
-/* GET: Fetch saved results for one tournament */
-if ($method === 'GET') {
-    $tournamentId = filter_var(
-        $_GET['tournament_id'] ?? null,
-        FILTER_VALIDATE_INT
-    );
+        if (!$tournamentId || !is_numeric($tournamentId)) {
+            sendResponse("error", "Tournament ID is required", null, 400);
+        }
 
-    if (!$tournamentId || $tournamentId < 1) {
-        resultResponse('error', 'Valid tournament_id is required.', null, 400);
-    }
-
-    $sql = "SELECT
+        $sql = "
+            SELECT
                 r.id AS result_id,
                 r.match_id,
+                m.tournament_id,
+                m.group_id,
+                m.stage,
+                m.match_date,
+                m.venue,
+                m.status,
+                m.team1_id,
+                t1.name AS team1_name,
                 r.team1_score,
+                m.team2_id,
+                t2.name AS team2_name,
                 r.team2_score,
                 r.winner_team_id,
                 r.outcome,
-                r.recorded_at,
-                m.tournament_id,
-                m.group_id,
-                m.match_date,
-                m.venue,
-                m.stage,
-                m.status,
-                t1.id AS team1_id,
-                t1.name AS team1_name,
-                t2.id AS team2_id,
-                t2.name AS team2_name
+                r.recorded_at
             FROM results r
-            JOIN matches m ON m.id = r.match_id
-            JOIN teams t1 ON t1.id = m.team1_id
-            JOIN teams t2 ON t2.id = m.team2_id
+            JOIN matches m ON r.match_id = m.id
+            JOIN teams t1 ON m.team1_id = t1.id
+            JOIN teams t2 ON m.team2_id = t2.id
             WHERE m.tournament_id = ?
-            ORDER BY r.recorded_at DESC";
+            ORDER BY m.match_date, m.id
+        ";
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$tournamentId]);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([(int)$tournamentId]);
 
-    resultResponse('success', 'Tournament results loaded.', $stmt->fetchAll());
-}
-
-/* POST: Save or update scores */
-if ($method === 'POST') {
-    $data = resultInput();
-
-    $matchId = filter_var(
-        $data['match_id'] ?? null,
-        FILTER_VALIDATE_INT
-    );
-
-    $score1 = $data['team1_score'] ?? null;
-    $score2 = $data['team2_score'] ?? null;
-
-    if (
-        !$matchId || $matchId < 1 ||
-        filter_var($score1, FILTER_VALIDATE_INT) === false ||
-        filter_var($score2, FILTER_VALIDATE_INT) === false ||
-        (int)$score1 < 0 ||
-        (int)$score2 < 0
-    ) {
-        resultResponse(
-            'error',
-            'Match ID and non-negative whole-number scores are required.',
-            null,
-            400
-        );
+        sendResponse("success", "Results fetched successfully", $stmt->fetchAll());
     }
 
-    $stmt = $pdo->prepare(
-        'SELECT id, team1_id, team2_id
-         FROM matches WHERE id = ?'
-    );
-    $stmt->execute([$matchId]);
-    $match = $stmt->fetch();
+    // POST: Save or update match result
+    if ($method === "POST") {
+        $data = getJsonInput();
 
-    if (!$match) {
-        resultResponse('error', 'Match not found.', null, 404);
-    }
+        $matchId = $data["match_id"] ?? null;
+        $team1Score = $data["team1_score"] ?? null;
+        $team2Score = $data["team2_score"] ?? null;
 
-    $score1 = (int)$score1;
-    $score2 = (int)$score2;
+        if (
+            !$matchId ||
+            !is_numeric($matchId) ||
+            !is_numeric($team1Score) ||
+            !is_numeric($team2Score)
+        ) {
+            sendResponse(
+                "error",
+                "Match ID and both scores are required",
+                null,
+                400
+            );
+        }
 
-    if ($score1 > $score2) {
-        $winnerId = (int)$match['team1_id'];
-        $outcome = 'team1_win';
-    } elseif ($score2 > $score1) {
-        $winnerId = (int)$match['team2_id'];
-        $outcome = 'team2_win';
-    } else {
-        $winnerId = null;
-        $outcome = 'draw';
-    }
+        $matchId = (int)$matchId;
+        $team1Score = (int)$team1Score;
+        $team2Score = (int)$team2Score;
 
-    try {
+        if ($team1Score < 0 || $team2Score < 0) {
+            sendResponse("error", "Scores cannot be negative", null, 400);
+        }
+
+        // Determine winner and outcome
+        if ($team1Score > $team2Score) {
+            $outcome = "team1_win";
+        } elseif ($team2Score > $team1Score) {
+            $outcome = "team2_win";
+        } else {
+            $outcome = "draw";
+        }
+
         $pdo->beginTransaction();
 
-        // match_id is UNIQUE, so repeated submissions update the result.
-        $stmt = $pdo->prepare(
-            "INSERT INTO results
+        // Fetch the match teams
+        $matchStmt = $pdo->prepare("
+            SELECT id, team1_id, team2_id
+            FROM matches
+            WHERE id = ?
+            FOR UPDATE
+        ");
+
+        $matchStmt->execute([$matchId]);
+        $match = $matchStmt->fetch();
+
+        if (!$match) {
+            $pdo->rollBack();
+            sendResponse("error", "Match not found", null, 404);
+        }
+
+        $winnerTeamId = null;
+
+        if ($outcome === "team1_win") {
+            $winnerTeamId = (int)$match["team1_id"];
+        } elseif ($outcome === "team2_win") {
+            $winnerTeamId = (int)$match["team2_id"];
+        }
+
+        // Insert result or update the existing result
+        $resultStmt = $pdo->prepare("
+            INSERT INTO results
                 (match_id, team1_score, team2_score, winner_team_id, outcome)
-             VALUES (?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE
+            VALUES (?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
                 team1_score = VALUES(team1_score),
                 team2_score = VALUES(team2_score),
                 winner_team_id = VALUES(winner_team_id),
                 outcome = VALUES(outcome),
-                recorded_at = CURRENT_TIMESTAMP"
-        );
+                recorded_at = CURRENT_TIMESTAMP
+        ");
 
-        $stmt->execute([
+        $resultStmt->execute([
             $matchId,
-            $score1,
-            $score2,
-            $winnerId,
+            $team1Score,
+            $team2Score,
+            $winnerTeamId,
             $outcome
         ]);
 
-        $stmt = $pdo->prepare(
-            "UPDATE matches SET status = 'completed' WHERE id = ?"
-        );
-        $stmt->execute([$matchId]);
+        // Mark match as completed
+        $updateMatch = $pdo->prepare("
+            UPDATE matches
+            SET status = 'completed'
+            WHERE id = ?
+        ");
+
+        $updateMatch->execute([$matchId]);
 
         $pdo->commit();
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
 
-        error_log($e->getMessage());
-        resultResponse('error', 'Could not save the result.', null, 500);
+        sendResponse("success", "Result saved successfully", [
+            "match_id" => $matchId,
+            "team1_score" => $team1Score,
+            "team2_score" => $team2Score,
+            "winner_team_id" => $winnerTeamId,
+            "outcome" => $outcome
+        ]);
     }
 
-    resultResponse('success', 'Result saved successfully.', [
-        'match_id' => $matchId,
-        'team1_score' => $score1,
-        'team2_score' => $score2,
-        'winner_team_id' => $winnerId,
-        'outcome' => $outcome,
-        'match_status' => 'completed'
-    ], 201);
-}
+    sendResponse("error", "Method not allowed", null, 405);
 
-resultResponse('error', 'Method not allowed.', null, 405);
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
+    sendResponse("error", "Server error: " . $e->getMessage(), null, 500);
+}
+?>
