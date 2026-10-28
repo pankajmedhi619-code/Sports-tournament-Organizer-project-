@@ -191,8 +191,86 @@
                     team_id: teamId
                 })
             });
+        },
+        
+        // ------------------------------
+        // MATCHES
+        // ------------------------------
+
+        // ------------------------------
+        // MATCHES
+        // ------------------------------
+
+        getMatches(tournamentId) {
+            return request(
+                `matches.php?tournament_id=${encodeURIComponent(tournamentId)}`
+            );
+        },
+
+        generateRoundRobin(tournamentId) {
+            return request("matches.php", {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "generate_round_robin",
+                    tournament_id: Number(tournamentId)
+                })
+            });
+        },
+
+        generateRoundRobin(tournamentId) {
+            return request("matches.php", {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "generate_round_robin",
+                    tournament_id: Number(tournamentId)
+                })
+            });
+        },
+
+        scheduleMatch(match) {
+            return request("matches.php", {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "schedule",
+                    ...match
+                })
+            });
+        },
+
+        updateMatchStatus(matchId, status) {
+            return request(
+                `matches.php?id=${encodeURIComponent(matchId)}`,
+                {
+                    method: "PUT",
+                    body: JSON.stringify({ status })
+                }
+            );
+        },
+
+        // ------------------------------
+        // RESULTS
+        // ------------------------------
+
+        getResults(tournamentId) {
+            return request(
+                `results.php?tournament_id=${encodeURIComponent(tournamentId)}`
+            );
+        },
+
+        saveResult(matchId, team1Score, team2Score) {
+            return request("results.php", {
+                method: "POST",
+                body: JSON.stringify({
+                    match_id: Number(matchId),
+                    team1_score: Number(team1Score),
+                    team2_score: Number(team2Score)
+                })
+            });
         }
+
     };
+    
+    
 
     // Make API available to other browser scripts and Node.js tests.
     if (typeof module !== "undefined" && module.exports) {
